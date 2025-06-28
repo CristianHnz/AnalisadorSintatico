@@ -178,10 +178,14 @@ function createRestart() {
 
 function generateToken() {
     var tokenInput = document.getElementById('word-input');
-    tokenInput.value = generateTokenFromRule('S');
+    tokenInput.value = generateTokenFromRule('S', 20); // Limite de 20 caracteres
 }
 
-function generateTokenFromRule(rule) {
+function generateTokenFromRule(rule, maxLength) {
+    if (maxLength <= 0) {
+        return '';
+    }
+
     var ruleValue = selectRuleValue(rule);
     // Epsilon
     if (ruleValue === '-') {
@@ -190,15 +194,21 @@ function generateTokenFromRule(rule) {
 
     var currentToken = '';
     for (let i = 0; i < ruleValue.length; i++) {
+        if (currentToken.length >= maxLength) {
+            break;
+        }
+
         var character = ruleValue[i];
         if (character === character.toLowerCase()) {
-            currentToken = currentToken + character;
+            currentToken += character;
         } else {
-            currentToken = currentToken + generateTokenFromRule(character);
+            // Calcula quanto espaço ainda temos antes de ultrapassar o limite
+            var remainingLength = maxLength - currentToken.length;
+            currentToken += generateTokenFromRule(character, remainingLength);
         }
     }
 
-    return currentToken;
+    return currentToken.slice(0, maxLength); // Garantia final de que nunca ultrapassa 20
 }
 
 function selectRuleValue(rule) {
@@ -219,6 +229,10 @@ function selectRuleValue(rule) {
         }
 
         possibleValues.push(value);
+    }
+
+    if (possibleValues.length === 0) {
+        return '-'; // ou outro fallback
     }
 
     var chosenIndex = randomIntFromInterval(0, possibleValues.length - 1);
